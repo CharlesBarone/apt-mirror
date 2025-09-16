@@ -8,6 +8,7 @@ set run_postmirror    0
 set nthreads          20
 set limit_rate        100m
 set _tilde            0
+set _plus             0
 # Use --unlink with wget (for use with hardlinked directories)
 set unlink            1
 set use_proxy         off
