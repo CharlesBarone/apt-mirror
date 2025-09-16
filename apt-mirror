@@ -815,11 +815,13 @@ sub need_update
 
     my ( undef, undef, undef, undef, undef, undef, undef, $size ) = _stat($filename);
 
-    return 1 unless ($size);
+    return 1 unless (defined $size);
+    return 1 if ($size <= 0);
+
     return 0 if $size_on_server == $size;
 
     # The file is corrupted, throw it away so we can download it again
-    unlink $filename;
+    unlink $filename || die("apt-mirror: unlink error: S! for file: $filename");
     return 1;
 }
 
@@ -888,7 +890,7 @@ sub process_index
                 add_url_to_download( $uri . "/" . $lines{"Filename:"}, $lines{"Size:"} );
             }
         }
-        else
+        elsif ( exists $lines{"Files:"} )
         {    # Sources index
             foreach ( split( /\n/, $lines{"Files:"} ) )
             {
@@ -970,11 +972,15 @@ foreach ( values %urls_to_download )
     $need_bytes += $_;
 }
 
-my $size_output = format_bytes($need_bytes);
+if ($need_bytes > 0)
+{
+    my $size_output = format_bytes($need_bytes);
 
-print "$size_output will be downloaded into archive.\n";
+    print "$size_output will be downloaded into archive.\n";
 
-download_urls( "archive", sort keys %urls_to_download );
+    download_urls( "archive", sort keys %urls_to_download );
+}
+
 
 ######################################################################################
 ## Copy skel to main archive
